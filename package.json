@@ -1,0 +1,24 @@
+{
+  "name": "shark-detector",
+  "version": "1.0.0",
+  "description": "Detect coin sharks when they appear in the market",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node ./src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tuyennguyen266/shark-detector.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tuyennguyen266/shark-detector/issues"
+  },
+  "homepage": "https://github.com/tuyennguyen266/shark-detector#readme",
+  "dependencies": {
+    "axios": "^0.17.1",
+    "sleep": "^5.1.1"
+  }
+}

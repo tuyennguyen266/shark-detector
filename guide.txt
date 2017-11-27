@@ -1,0 +1,66 @@
+
+Join game strategy
+	Buy decision:
+		Detect volume buy/sell, number of buy/sell, USD buy/sell in last 5 min to find bump signal.
+	  	If found signal, observe it and consolidate the signal by checking:
+	    	- Pass the nearest resistance.
+	    	- The next periods are pumped also.
+	  	When ensure the pump, buy at the the pull back (rest zone).
+
+
+Out game stragegy:
+
+
+
+- Volume increase 5x more than average of last 10 candles and next candle still > 5x of those 10 candles
+- Number of buy trade > 10x number of sell trade in last candle
+- Volume of buy trade > 10x volume of sell trade in USD and Coin in last candle
+- The biggest buy trade is very big comparing to the biggest sell trade. Not required.
+- Buy order < 2/3 sell order before the bumping. Not required.
+
+
+- Volume increase >= 5x of the average of last 10 candles and next candle still > 5x of those 10 candles.
+. Save the average at the point the first >= 5x for comparing in the next candle.
+. Allow configure the timeframe to calculate volume. For now using 5 minutes
+. Get volume
+=> Detect which candles are unusual
+
+
+- Number of buy trade > 10x number of sell trade in unusual candles
+. Store last candle trade statistics.
+. Get buy trade in a timeframe
+. Get sell trade in a timeframe
+
+
+- Volume of buy trade > 10x volume of sell trade in USD and Coin in unusual candles
+. Store last candle trade statistics.
+. Get buy trade volume in a timeframe.
+. Get sell trade volume in a timeframe.
+
+
+- Buy order < 2/3 sell order before the bumping.
+. Store order book and group by price with 20% distance.
+. Store order book in last 30 minutes.
+. Get the nearest order book before timestamp.
+
+
+- Store trade statistics when detect unusual candles
+. Time range
+. Number of selling trades
+. Number of buying trades
+. Volume of selling trades
+. Volume of buying trades
+. Top 10 buying trades
+. Top 10 selling trades
+
+- Get OHLC (timeframe config)
+- Calculate the last 10 (config) average
+  If detect unusual in candles
+    - Store timeframe
+    - Store average, unusual candle values.
+    - Fetch trades, store its statistics
+      Detect unusual in number of buying, selling trades
+      Detect unusual in the biggest buying, selling trades
+    - Check orderbook before timeframe
+
+- Get orderbook
