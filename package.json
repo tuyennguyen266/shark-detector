@@ -18,7 +18,6 @@
   },
   "homepage": "https://github.com/tuyennguyen266/shark-detector#readme",
   "dependencies": {
-    "axios": "^0.17.1",
-    "sleep": "^5.1.1"
+    "axios": "^0.17.1"
   }
 }
