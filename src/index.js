@@ -1,21 +1,23 @@
-const apiFetcher = require('./api-fetcher');
-const unusualDetector = require('./unusual-detector');
+const ApiFetcher = require('./api-fetcher');
+const UnusualDetector = require('./unusual-detector');
 const Utils = require('./utils');
 const Config = require('./config');
+const DataRepo = require('./data-repository');
+const TradeUtils = require('./trades-utils');
 
 var unusualVolumeLevel = 0;
 var averageVolume = 0;
 var numberOfUnusualColumn = 0;
 var numberOfColumnBackUsual = 0;
 var unusualColumns = [];
-var tradeQueue = [];
 var isFetchingTrades = false;
 var lastTradeFetchingTimestamp = Utils.getCurrentTimestamp() - 10;
+var lastTradeId = 0;
 
 setInterval(() => {
   if (isFetchingTrades) return;
   fetchTrades();
-}, 20000); // 5 seconds
+}, 5000); // 10 seconds
 
 setInterval(() => {
   fetchVolume();
@@ -23,7 +25,7 @@ setInterval(() => {
 
 const fetchVolume = () => {
   console.log('------------------------------------------------------------');
-  apiFetcher.fetchVolume(Config.ohlcTimeframe, Config.ohlcSampleNumber)
+  ApiFetcher.fetchVolume(Config.ohlcTimeframe, Config.ohlcSampleNumber)
     .then(result => checkVolume(result))
     .then(_ => {
       console.log('Average volume: ', averageVolume);
@@ -39,6 +41,10 @@ const fetchVolume = () => {
 
 const checkVolume = (volumeData) => {
   const volumes = volumeData.volumes;
+  if (volumes.length < Config.ohlcSampleNumber) {
+    return;
+  }
+
   const curVolume = volumes[volumes.length-1];
 
   if (unusualVolumeLevel === 0) {
@@ -46,7 +52,7 @@ const checkVolume = (volumeData) => {
     averageVolume = Utils.averageOf(lastVolumes);
   }
 
-  const unusualLevel = unusualDetector.detectUnusualVolume(curVolume, averageVolume);
+  const unusualLevel = UnusualDetector.detectUnusualVolume(curVolume, averageVolume);
   if (unusualLevel) {
     numberOfUnusualColumn += 1;
     increaseLevelOfUnusualIfLower(unusualLevel);
@@ -56,7 +62,6 @@ const checkVolume = (volumeData) => {
     increaseNumberOfColumnBackToUsual();
     resetIfBackToUsual();
   }
-  console.log('checkVolume response');
 }
 
 const increaseLevelOfUnusualIfLower = (expectLevel) => {
@@ -80,10 +85,10 @@ const storeCurrentColumnIfUnusual = (ohlcs) => {
     return;
   }
   const curOhlc = ohlcs[ohlcs.length-1];
-  const columnTrades = Utils.filterTrades(tradeQueue, curOhlc[0] - Config.ohlcTimeframe, curOhlc[0]);
+  const columnTrades = TradeUtils.filterTrades(DataRepo.getTrades(), curOhlc[0] - Config.ohlcTimeframe, curOhlc[0]);
   const curColumn = {
     ohlc: curOhlc,
-    statistics: Utils.getTradeStatistics(columnTrades)
+    statistics: TradeUtils.getTradeStatistics(columnTrades)
   }
   unusualColumns.push(curColumn);
 }
@@ -99,13 +104,22 @@ const resetIfBackToUsual = () => {
 }
 
 const fetchTrades = () => {
+  console.log('========================================================');
   isFetchingTrades = true;
-  return apiFetcher.fetchTrades(lastTradeFetchingTimestamp)
-    .then(trades => ([...trades, ...tradeQueue]))
-    .then(trades => (Utils.removeDuplicateTrades(trades)))
+  return ApiFetcher.fetchTrades(lastTradeFetchingTimestamp)
+    // .then(trades => {
+    //   console.log('New Trade Beginning: ', trades[0]);
+    //   return trades;
+    // })
     .then(trades => {
-      tradeQueue = Utils.filterTradesForSecond(trades, Config.secondToKeepTrades);
-      return tradeQueue;
+      console.log('NEW TRADES STATISTICS:');
+      console.log(TradeUtils.getTradeStatistics(trades));
+      return trades;
+    })
+    .then(trades => ([...trades, ...DataRepo.getTrades()]))
+    .then(trades => (TradeUtils.removeDuplicateTrades(trades)))
+    .then(trades => {
+      return DataRepo.saveTrades(TradeUtils.filterTradesForSecond(trades, Config.secondToKeepTrades));
     })
     .then(trades => {
       if (trades.length > 0) {
@@ -114,13 +128,9 @@ const fetchTrades = () => {
       return trades;
     })
     .then(trades => {
-      console.log('========================================================');
-      console.log('TRADES STATISTICS:');
-      console.log(Utils.getTradeStatistics(trades));
-    })
-    .then(_ => {
       console.log('FETCH TRADES DONE ========================================================');
       isFetchingTrades = false;
+      return trades
     })
     .catch(error => {
       console.log('ERROR: ', error);

@@ -1,9 +1,19 @@
 const axios = require('axios');
 const Config = require('./config');
 const Utils = require('./utils');
+const TradeUtils = require('./trades-utils');
+const DataRepo = require('./data-repository');
 
 const fetchVolume = (timeframeInSeconds, numberOfColumns) => {
-  return fetchOHLC(timeframeInSeconds, numberOfColumns)
+  // return fetchOHLC(timeframeInSeconds, numberOfColumns)
+  return new Promise((resolve, reject) => {
+    try {
+      const ohlcs = TradeUtils.getOhlcs(DataRepo.getTrades(), numberOfColumns, timeframeInSeconds);
+      resolve(ohlcs);
+    } catch(e) {
+      reject(e);
+    }
+  })
     .then(result => {
       if (result.length === 0) {
         throw 'empty result';
@@ -15,7 +25,7 @@ const fetchVolume = (timeframeInSeconds, numberOfColumns) => {
         volumes,
         ohlc: result,
         startTimestamp: result[0][0],
-        endTimestamp: result[result.length-1][0]
+        endTimestamp: result[result.length - 1][0]
       }
     })
 }
@@ -47,7 +57,7 @@ const fetchTradesAccummulateUntilNow = (trades) => {
   const fromTimestamp = trades.length > 0 ? trades[0].timestamp : Utils.getCurrentTimestamp() - 20;
   return fetchTrades(fromTimestamp)
     .then(newTrades => {
-      const accummulatedTrades = Utils.removeDuplicateTrades([...newTrades, ...trades]);
+      const accummulatedTrades = TradeUtils.removeDuplicateTrades([...newTrades, ...trades]);
       return accummulatedTrades;
     })
     .then(accummulatedTrades => {
@@ -63,7 +73,6 @@ const fetchTradesAccummulateUntilNow = (trades) => {
 }
 
 module.exports = {
-  fetchOHLC,
   fetchVolume,
   fetchTrades,
   fetchTradesAccummulateUntilNow
