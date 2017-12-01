@@ -4,6 +4,7 @@ const Utils = require('./utils');
 const Config = require('./config');
 const DataRepo = require('./data-repository');
 const TradeUtils = require('./trades-utils');
+const Logger = require('./logger');
 
 var unusualVolumeLevel = 0;
 var averageVolume = 0;
@@ -91,6 +92,8 @@ const storeCurrentColumnIfUnusual = (ohlcs) => {
     statistics: TradeUtils.getTradeStatistics(columnTrades)
   }
   unusualColumns.push(curColumn);
+  Logger.info('----------------------------------------');
+  Logger.info(curColumn);
 }
 
 const resetIfBackToUsual = () => {
@@ -100,6 +103,7 @@ const resetIfBackToUsual = () => {
     numberOfUnusualColumn = 0;
     numberOfColumnBackUsual = 0;
     unusualColumns = [];
+    Logger.info('========================================================================================');
   }
 }
 
