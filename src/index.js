@@ -86,13 +86,14 @@ const storeCurrentColumnIfUnusual = (ohlcs) => {
     return;
   }
   const curOhlc = ohlcs[ohlcs.length-1];
-  const columnTrades = TradeUtils.filterTrades(DataRepo.getTrades(), curOhlc[0] - Config.ohlcTimeframe, curOhlc[0]);
+  const columnTrades = TradeUtils.filterTrades(DataRepo.getTrades(), curOhlc[0] - (Config.ohlcTimeframe - 1), curOhlc[0]);
   const curColumn = {
     ohlc: curOhlc,
-    statistics: TradeUtils.getTradeStatistics(columnTrades)
+    statistics: TradeUtils.getTradeStatistics(columnTrades),
+    unusualLevel: unusualVolumeLevel,
+    averageVol: averageVolume
   }
   unusualColumns.push(curColumn);
-  Logger.info('----------------------------------------');
   Logger.info(curColumn);
 }
 
